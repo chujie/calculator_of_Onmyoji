@@ -7,6 +7,7 @@ import platform
 from calculator_of_Onmyoji import cal_and_filter as cal
 from calculator_of_Onmyoji import load_data
 from calculator_of_Onmyoji import write_data
+import cal_mitama_analysis
 
 
 def str2bool(v):
@@ -98,27 +99,6 @@ def sep_utf_str_to_dict(utf_str):
     return formated_dict
 
 
-def total_damage(mitama_comb, base_att, base_critdamage, total_limit):
-    """Calculate total damage and compare to the limit
-
-    Args:
-        mitama_comb (dict): Mitama combination
-        base_att (float): base attack
-        base_hitdamage (float): base critical damage
-        total_limit (float): desired total damage
-
-    Returns:
-        bool: True if over the limit, otherwise False
-    """
-    sum_data = mitama_comb.get('sum', {})
-    datt = float(sum_data[u'攻击'])
-    dattp = float(sum_data[u'攻击加成'])
-    dcritdamage = float(sum_data[u'暴击伤害'])
-    total_damage = ((base_att * (1 + dattp / 100) + datt) *
-                    (base_critdamage + dcritdamage) / 100)
-    return total_damage >= total_limit
-
-
 def main():
     args = parser.parse_args()
     file_name = args.source_data
@@ -160,6 +140,7 @@ def main():
     print('filter mitama finish')
 
     write_data.write_mitama_result(args.output_file, filter_result)
+
 
 
 if __name__ == '__main__':
