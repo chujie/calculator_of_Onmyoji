@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 # coding: utf-8
 import os
-from cal_mitama import total_damage
+from cal_and_filter import cal_total_damage
 from collections import defaultdict
 from heapq import heappush, heappop
 import write_data
@@ -25,7 +25,7 @@ def mitama_comb_nonoverlap(comb_data_list, path_to_output, MAX_OUTPUT = 5):
     for comb_data in comb_data_list:
         # first row of each comb_data is sum info
         sum_data = comb_data.get('sum', {})
-        tdmg = total_damage(comb_data, base_att, base_critdamage)
+        tdmg = cal_total_damage(comb_data, base_att, base_critdamage)
         sorted_comb_list.append((base_att/tdmg, serial_num, tdmg, comb_data))
         
         # write each mitama data into detail file
