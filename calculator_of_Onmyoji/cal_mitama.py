@@ -35,10 +35,16 @@ parser.add_argument("-M", "--mitama-suit",
                          u'"-M 针女,4.破势,2"为针女4件+破势2件')
 parser.add_argument("-P", "--prop-limit",
                     type=str,
-                    default=',0',
-                    help=u'期望限制的属性类型，多个属性条件用英文句号.间隔, '
+                    default='',
+                    help=u'期望限制的属性下限，多个属性条件用英文句号.间隔, '
                          u'例如"-P 暴击,90.暴击伤害,70"为暴击至少90'
                          u'且暴击伤害至少70')
+parser.add_argument("-UP", "--upper-prop-limit",
+                    type=str,
+                    default='',
+                    help=u'期望限制的属性上限，多个属性条件用英文句号.间隔，'
+                         u'例如"-UP 暴击,95.速度,20"为暴击最多95'
+                         u'且速度最多20')
 parser.add_argument("-2P", "--sec-prop-value",
                     type=str,
                     default=',0',
@@ -67,15 +73,18 @@ parser.add_argument("-AS", "--all-suit",
 parser.add_argument("-DL", "--damage-limit",
                     type=str,
                     default='0,0,0',
-                    help=u'期望的攻击*爆伤，'
-                         u'例如"-DL 20500,3126,150"，当基础攻击为3126，'
-                         u'基础爆伤为150，攻击*爆伤>=20500')
+                    help=u'基础攻击,基础暴伤,期望的攻击*暴伤，'
+                         u'例如"-DL 3126,150，20500"，当基础攻击为3126，'
+                         u'基础暴伤为150，攻击*暴伤>=20500')
 
 
 def sep_utf_str(utf_str):
     # solve problem with get utf8 args from shell
     if sysstr == 'Windows':
-        uni_str = utf_str.decode('gbk')
+        try:
+            uni_str = utf_str.decode('gbk')
+        except UnicodeDecodeError:
+            uni_str = utf_str.decode('big5')
     else:
         uni_str = utf_str.decode('utf8')
     if ',' in uni_str:
@@ -85,8 +94,14 @@ def sep_utf_str(utf_str):
 
 
 def sep_utf_str_to_dict(utf_str):
+    if not utf_str:
+        return dict()
+
     if sysstr == 'Windows':
-        uni_str = utf_str.decode('gbk')
+        try:
+            uni_str = utf_str.decode('gbk')
+        except UnicodeDecodeError:
+            uni_str = utf_str.decode('big5')
     else:
         uni_str = utf_str.decode('utf8')
     limit_list = uni_str.split('.')
@@ -107,6 +122,7 @@ def main():
 
     mitama_type_limit = sep_utf_str_to_dict(args.mitama_suit)
     prop_limit = sep_utf_str_to_dict(args.prop_limit)
+    upper_prop_limit = sep_utf_str_to_dict(args.upper_prop_limit)
 
     l2_prop, l2_prop_value = sep_utf_str(args.sec_prop_value)
     l4_prop, l4_prop_value = sep_utf_str(args.fth_prop_value)
@@ -114,25 +130,29 @@ def main():
 
     ignore_serial = sep_utf_str(args.ignore_serial)
 
+    base_att, base_critdamage, damage_limit = \
+        map(float, sep_utf_str(args.damage_limit))
+
     origin_data = load_data.get_mitama_data(file_name, ignore_serial)
     print('Loading data finish')
 
     locate_sep_data = load_data.sep_mitama_by_loc(origin_data)
 
     print('Start calculating')
-    mitama_comb = cal.filter_loc2make_combination(locate_sep_data,
-                                                  l2_prop, int(l2_prop_value),
-                                                  l4_prop, int(l4_prop_value),
-                                                  l6_prop, int(l6_prop_value))
+    locate_sep_data = cal.filter_loc(locate_sep_data,
+                                     l2_prop, int(l2_prop_value),
+                                     l4_prop, int(l4_prop_value),
+                                     l6_prop, int(l6_prop_value))
+
+    mitama_comb = cal.make_combination(locate_sep_data,
+                                       mitama_type_limit, args.all_suit)
 
     filter_result = cal.filter_mitama(mitama_comb,
                                       mitama_type_limit,
                                       prop_limit,
+                                      upper_prop_limit,
                                       all_suit=args.all_suit)
 
-    # further filter mitama comb by total damage
-    damage_limit, base_att, base_critdamage = \
-        map(float, sep_utf_str(args.damage_limit))
     if damage_limit > 0:
         filter_result = cal.fit_damage_limit(filter_result, base_att,
                                              base_critdamage, damage_limit)
