@@ -1,0 +1,3 @@
+[submodule "yys_soul_mgr"]
+	path = yys_soul_mgr
+	url = https://github.com/chujie/yys_soul_mgr.git
