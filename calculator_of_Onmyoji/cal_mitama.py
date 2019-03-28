@@ -90,11 +90,13 @@ class Calculator(object):
 
         self.ignore_serial = sep_utf_str(args.ignore_serial)
 
-        self.base_att, self.base_critdamage_att, self.damage_limit = \
-            list(map(float, sep_utf_str(args.damage_limit)))
+        self.base_att, self.base_critdamage_att, self.damage_limit, self.up_damage_limit = \
+            (list(map(float, sep_utf_str(args.damage_limit))) + [None])[:4]
+        self.damage_limit = (self.damage_limit, float('inf') if self.up_damage_limit is None else self.up_damage_limit )
 
-        self.base_hp, self.base_critdamage_hp, self.hp_crit_limit = \
-            list(map(float, sep_utf_str(args.health_limit)))
+        self.base_hp, self.base_critdamage_hp, self.hp_crit_limit, self.up_hp_crit_limit = \
+            (list(map(float, sep_utf_str(args.health_limit))) + [None])[:4]
+        self.hp_crit_limit = (self.hp_crit_limit, float('inf') if self.up_hp_crit_limit is None else self.up_hp_crit_limit)
 
         if (self.base_critdamage_att and self.base_critdamage_hp and
                 self.base_critdamage_att != self.base_critdamage_hp):
@@ -166,13 +168,13 @@ class Calculator(object):
         parser.add_argument("-DL", "--damage-limit",
                             type=str,
                             default='0,0,0',
-                            help='基础攻击,基础暴伤,期望的攻击*暴伤，'
-                                 '例如"-DL 3126,150，20500"，当基础攻击为3126，'
-                                 '基础暴伤为150，攻击*暴伤>=20500')
+                            help='基础攻击,基础暴伤,期望的攻击*暴伤下限[,期望的攻击*暴伤上限]，'
+                                 '例如"-DL 3126,150,20500,25000"，当基础攻击为3126，'
+                                 '基础暴伤为150，25000>=攻击*暴伤>=20500')
         parser.add_argument("-HL", "--health-limit",
                             type=str,
                             default='0,0,0',
-                            help='基础生命,基础暴伤,期望的生命*暴伤，'
+                            help='基础生命,基础暴伤,期望的生命*暴伤下限,[期望的生命*暴伤上限]，'
                                  '例如"-HL 8000,150,60000"，当基础生命为8000，'
                                  '基础暴伤为150，生命*暴伤>=60000')
         parser.add_argument("-AO", "--attack-only",
@@ -255,5 +257,8 @@ class Calculator(object):
 
 
 if __name__ == '__main__':
+    if __package__ is None:
+        from os import sys, path
+        sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
     calculator = Calculator()
     calculator.run()

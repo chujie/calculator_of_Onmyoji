@@ -352,13 +352,15 @@ class MitamaComb(object):
 
     def fit_damage_limit(self, mitama_comb_list):
         return self.fit_mitama_lambda(mitama_comb_list,
-                                      lambda x: self.cal_total_damage(x) >=
-                                      self.damage_limit)
+                                      lambda x: self.damage_limit[1] >=
+                                      self.cal_total_damage(x) >=
+                                      self.damage_limit[0])
 
     def fit_hp_crit_limit(self, mitama_comb_list):
         return self.fit_mitama_lambda(mitama_comb_list,
-                                      lambda x: self.cal_hp_crit(x) >=
-                                      self.hp_crit_limit)
+                                      lambda x: self.hp_crit_limit[1] >=
+                                      self.cal_hp_crit(x) >=
+                                      self.hp_crit_limit[0])
 
     def fit_mitama_lambda(self, mitama_comb_list, filter_func):
         """Filter the mitama combination by a customized function
@@ -428,10 +430,10 @@ class MitamaComb(object):
         # 按组合属性上下限过滤
         filter_result = self.filter_mitama(mitama_comb)
         # 按攻击*暴伤过滤
-        if self.damage_limit > 0:
+        if self.damage_limit[0] > 0 or self.damage_limit[1] < float('inf'):
             filter_result = self.fit_damage_limit(filter_result)
         # 按生命*暴伤过滤
-        if self.hp_crit_limit > 0:
+        if self.hp_crit_limit[0] > 0 or self.hp_crit_limit[1] < float('inf'):
             filter_result = self.fit_hp_crit_limit(filter_result)
 
         return filter_result
